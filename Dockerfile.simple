@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Minimal dependencies
+RUN pip install --no-cache-dir \
+    python-dotenv \
+    openai \
+    chromadb \
+    tiktoken \
+    pydantic
+
+COPY main-simple.py .env.example ./
+
+VOLUME ["/app/chroma_db", "/app/data"]
+
+ENTRYPOINT ["python", "main-simple.py"]
+CMD ["--help"]
+

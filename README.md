@@ -1,182 +1,95 @@
 # DreamyDormouse 🐭
 
-A RAG (Retrieval-Augmented Generation) system for querying large collections of Markdown files using RAG-Anything.
+A RAG (Retrieval-Augmented Generation) system for querying large collections of Markdown files.
 
-[![Docker Build](https://github.com/yourusername/dreamydormouse/actions/workflows/docker-build.yml/badge.svg)](https://github.com/yourusername/dreamydormouse/actions/workflows/docker-build.yml)
+## ⚠️ Important: Image Size Issues
 
-## Features
+The current build includes heavy ML dependencies (PyTorch, CUDA libraries) totaling **5+ GB**. This causes:
+- Very slow builds (30-45 minutes)
+- GitHub Actions timeouts
+- Large image downloads
 
-- 📚 Process directories with 20,000+ Markdown files
-- 🔍 Natural language querying across your entire knowledge base
-- 🚀 Recursive directory scanning
-- ⚡ Concurrent file processing
-- 🧠 Knowledge graph + vector embeddings for intelligent retrieval
-- 💬 Multiple query modes (hybrid, local, global)
-- 🐳 Docker support for easy deployment
+**Solutions:**
 
-## Quick Start with Docker
+1. **Wait for current build** (it's probably still running, not failed)
+2. **Use local build** instead of GitHub Actions
+3. **Optimize dependencies** (see below)
 
-### Prerequisites
-
-- Docker and Docker Compose installed
-- OpenAI API key
-
-### Setup
-
-1. **Clone and configure**
-
-   ```bash
-   # Copy environment template
-   cp .env.example .env
-
-   # Edit .env and add your OpenAI API key
-   nano .env
-   ```
-
-2. **Place your Markdown files**
-
-   ```bash
-   # Create a data directory and add your markdown files
-   mkdir -p data
-   # Copy your markdown files to ./data/
-   ```
-
-3. **Build the container**
-
-   ```bash
-   docker compose build
-   ```
-
-### Usage
-
-#### Process Markdown Files
-
+## Quick Start (Local Build Recommended)
 ```bash
-# Process all markdown files in ./data directory
-docker compose run --rm dreamydormouse process /app/data
-
-# With custom settings
-docker compose run --rm dreamydormouse process /app/data \
-  --max-workers 8 \
-  --recursive
-```
-
-#### Query Your Documents
-
-```bash
-# Basic query
-docker compose run --rm dreamydormouse query \
-  "What are the main topics discussed in the documents?"
-
-# Using different query modes
-docker compose run --rm dreamydormouse query \
-  "Explain the concept of X" --mode hybrid
-```
-
-#### Show System Info
-
-```bash
-docker compose run --rm dreamydormouse info
-```
-
-## GitHub Actions
-
-This project includes automated Docker builds via GitHub Actions:
-
-- **`docker-build.yml`**: Runs on every push/PR to test the build
-- **`docker-publish.yml`**: Publishes images to GitHub Container Registry on releases
-
-To use the published image:
-
-```bash
-docker pull ghcr.io/yourusername/dreamydormouse:latest
-docker run --rm ghcr.io/yourusername/dreamydormouse:latest --help
-```
-
-## Development
-
-### Local Testing
-
-```bash
-# Build
+# Build locally (faster with better feedback)
 docker compose build
 
-# Run tests
+# Or use docker directly
+docker build -t dreamydormouse .
+
+# Check image size
+docker images dreamydormouse
+```
+
+## Reducing Image Size
+
+The dependencies include unnecessary heavy packages. To fix:
+```bash
+# Check what's being installed
+./check-deps.sh
+
+# Option 1: Use slim Dockerfile
+docker build -f Dockerfile.slim -t dreamydormouse:slim .
+
+# Option 2: Modify pyproject.toml to exclude heavy deps
+# Remove or make optional: torch, nvidia-*, opencv-python
+```
+
+## Why Is the Build So Large?
+
+The `lightrag-hku` and `raganything` packages pull in:
+- PyTorch (858 MB)
+- NVIDIA CUDA libraries (3.5+ GB total)
+- OpenCV, scipy, scikit-image, etc.
+
+**Most of these aren't needed for basic RAG operations!**
+
+## Development Workflow
+```bash
+# Local development (skip GitHub Actions for now)
+git add .
+git commit -m "Update"
+git push
+
+# Build locally instead
+docker compose build
 docker compose run --rm dreamydormouse info
-
-# Get shell access
-docker compose run --rm --entrypoint /bin/bash dreamydormouse
 ```
 
-### CI/CD
+## GitHub Actions Timeout
 
-The project uses GitHub Actions for continuous integration:
+If GitHub Actions times out:
 
-1. Every push triggers a build and test
-2. Docker images are cached for faster builds
-3. Release tags automatically publish to GitHub Container Registry
+1. **Add timeout** (already done in updated workflow)
+2. **Build locally** and push image manually
+3. **Optimize dependencies** to reduce size
 
-## Query Modes
-
-- **hybrid** (default): Combines local and global search for best results
-- **local**: Focuses on specific relevant chunks
-- **global**: Provides broader context and summaries
-- **naive**: Simple semantic search without knowledge graph
-- **mix**: Adaptive combination of modes
-
-## Environment Variables
-
-All environment variables can be set in `.env`:
-
-- `OPENAI_API_KEY` - Your OpenAI API key (required)
-- `OPENAI_BASE_URL` - Custom API endpoint (optional)
-- `OPENAI_MODEL` - LLM model to use (default: gpt-4o-mini)
-- `EMBEDDING_MODEL` - Embedding model (default: text-embedding-3-large)
-- `EMBEDDING_DIM` - Embedding dimension (default: 3072)
-
-## License
-
-MIT
-
-## Credits
-
-Built on top of [RAG-Anything](https://github.com/HKUDS/RAG-Anything) and [LightRAG](https://github.com/HKUDS/LightRAG).
-
-````
-
-**Commands to clean up:**
-
+## Checking Build Progress
 ```bash
-# Remove debug script
-rm debug-docker.sh
+# If build seems stuck, check Docker
+docker ps -a
 
-# Remove debug Dockerfile if it exists
-rm -f Dockerfile.debug
+# Check build logs
+docker logs <container-id>
 
-# Clean up Docker build cache (optional)
-docker builder prune -f
-
-# Full cleanup (removes all unused Docker resources)
-docker system prune -af
-````
-
-**To use GitHub Actions:**
-
-1. Push the changes:
-
-```bash
-git add .github/workflows/
-git add Dockerfile README.md
-git rm debug-docker.sh
-git commit -m "Add GitHub Actions for Docker build and publish"
-git push origin master
+# Monitor system resources
+docker stats
 ```
 
-2. The build will trigger automatically on push
+## Manual Image Push (Alternative to GitHub Actions)
+```bash
+# Build locally
+docker build -t ghcr.io/yourusername/dreamydormouse:latest .
 
-3. To publish to GitHub Container Registry:
-   - Go to Settings → Actions → General
-   - Enable "Read and write permissions" for workflows
-   - Create a release tag: `git tag v0.1.0 && git push --tags`
+# Login to GitHub Container Registry
+echo $GITHUB_TOKEN | docker login ghcr.io -u yourusername --password-stdin
 
-The image will be available at: `ghcr.io/yourusername/dreamydormouse:latest`
+# Push
+docker push ghcr.io/yourusername/dreamydormouse:latest
+```

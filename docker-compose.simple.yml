@@ -1,0 +1,11 @@
+services:
+  dreamydormouse:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data:ro
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
