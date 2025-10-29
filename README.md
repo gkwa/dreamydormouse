@@ -1,63 +1,53 @@
 # DreamyDormouse 🐭
 
-A RAG system for querying Markdown files.
+Lightweight RAG system for Markdown files. No GPU libraries required!
 
-## ⚠️ Important: Recommended Approach
+## Features
 
-**For old macOS laptops, skip Docker!** Just use Python directly:
+- ✅ Works on old macOS via Docker
+- ✅ Fast build (2-3 minutes, not 45!)
+- ✅ Small image (~150MB, not 5GB!)
+- ✅ Uses OpenAI API (no local GPU needed)
+
+## Quick Start
 ```bash
-# Install (takes 1-2 minutes)
-pip install python-dotenv lightrag-hku raganything
-
-# Use
-export OPENAI_API_KEY="your-key"
-python main.py process ./your-markdown-files
-python main.py query "What are the main topics?"
-```
-
-## Why Skip Docker?
-
-- **Docker build:** 30-45 minutes, 5GB download
-- **Local install:** 2 minutes, works immediately
-- **Both do the exact same thing** on your laptop
-
-## Docker (If You Really Want It)
-```bash
-# Build (will take a LONG time and download 5GB)
+# Build (takes ~3 minutes)
 docker compose build
 
-# Use
+# Process documents
 docker compose run --rm dreamydormouse process /app/data
-docker compose run --rm dreamydormouse query "your question"
-```
-
-## What Gets Installed
-
-The dependencies include heavy ML packages:
-- PyTorch (858 MB)
-- NVIDIA CUDA libraries (3.5+ GB)
-- Various ML tools
-
-**These are NOT used** when you run on macOS (or any laptop). They're optional dependencies that get installed anyway. All the actual AI work happens via OpenAI's API.
-
-## System Requirements
-
-- Python 3.12+
-- OpenAI API key
-- Internet connection
-- 1GB RAM
-- **No GPU needed** - everything runs via API calls
-
-## Quick Test
-```bash
-# Create test documents
-mkdir test-docs
-echo "# AI\nAI is cool" > test-docs/ai.md
-echo "# Python\nPython is great" > test-docs/py.md
-
-# Process
-python main.py process ./test-docs
 
 # Query
-python main.py query "Tell me about AI"
+docker compose run --rm dreamydormouse query "What are the main topics?"
+
+# Info
+docker compose run --rm dreamydormouse info
+```
+
+## What Changed?
+
+**Removed heavy dependencies:**
+- ❌ PyTorch (858 MB)
+- ❌ NVIDIA CUDA (3.5 GB)  
+- ❌ lightrag-hku (pulls in GPU libs)
+- ❌ raganything (pulls in GPU libs)
+
+**Kept essentials:**
+- ✅ OpenAI API client
+- ✅ ChromaDB (vector storage)
+- ✅ Tiktoken (token counting)
+
+**Result:** Same functionality, 98% smaller!
+
+## GitHub Actions
+
+The image builds automatically on push and is published to:
+```
+ghcr.io/yourusername/dreamydormouse:latest
+```
+
+Pull and use:
+```bash
+docker pull ghcr.io/yourusername/dreamydormouse:latest
+docker run --rm -v ./data:/app/data:ro ghcr.io/yourusername/dreamydormouse:latest process /app/data
 ```

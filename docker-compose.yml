@@ -4,14 +4,11 @@ services:
     container_name: dreamydormouse
     volumes:
       - ./rag_storage:/app/rag_storage
-      - ./output:/app/output
       - ./data:/app/data:ro
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-large}
-      - EMBEDDING_DIM=${EMBEDDING_DIM:-3072}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
     stdin_open: true
     tty: true
 

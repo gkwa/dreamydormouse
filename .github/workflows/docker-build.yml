@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45  # Add timeout to prevent hanging forever
+    timeout-minutes: 10  # Should finish in ~3 minutes
 
     steps:
       - name: Checkout code
@@ -21,7 +21,6 @@ jobs:
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
-        timeout-minutes: 40  # Add timeout for build step
         with:
           context: .
           file: ./Dockerfile
@@ -30,31 +29,61 @@ jobs:
           tags: dreamydormouse:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          # Add build progress output
-          outputs: type=docker
 
       - name: Check image size
         run: |
           echo "Image size:"
           docker images dreamydormouse:test --format "{{.Size}}"
 
-      - name: Verify uv installation
+      - name: Verify installation
         run: |
-          echo "Checking uv version..."
-          docker run --rm dreamydormouse:test uv --version
+          docker run --rm dreamydormouse:test python -c "import openai, chromadb, tiktoken; print('✅ All imports work')"
 
-      - name: Verify Python environment
+      - name: Show help
         run: |
-          echo "Checking Python version..."
-          docker run --rm dreamydormouse:test python --version
+          docker run --rm dreamydormouse:test --help
 
-      - name: Show help output
+      - name: Create test data
         run: |
-          echo "Testing CLI help..."
-          docker run --rm dreamydormouse:test
+          mkdir -p data
+          echo "# Test Doc" > data/test.md
+          echo "This is a test document." >> data/test.md
 
-      - name: List installed packages
+      - name: Test info command
         run: |
-          echo "Listing installed packages..."
-          docker run --rm dreamydormouse:test python -m pip list | head -50
+          docker run --rm dreamydormouse:test info
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
