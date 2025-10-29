@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # Should finish in ~3 minutes
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -37,17 +37,11 @@ jobs:
 
       - name: Verify installation
         run: |
-          docker run --rm dreamydormouse:test python -c "import openai, chromadb, tiktoken; print('✅ All imports work')"
+          docker run --rm --entrypoint python dreamydormouse:test -c "import openai, chromadb, tiktoken; print('✅ All imports work')"
 
       - name: Show help
         run: |
           docker run --rm dreamydormouse:test --help
-
-      - name: Create test data
-        run: |
-          mkdir -p data
-          echo "# Test Doc" > data/test.md
-          echo "This is a test document." >> data/test.md
 
       - name: Test info command
         run: |
