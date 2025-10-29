@@ -5,13 +5,11 @@ description = "RAG system for querying Markdown files"
 readme = "README.md"
 requires-python = ">=3.12"
 
+# Simplified dependencies - let lightrag-hku pull what it needs
 dependencies = [
     "python-dotenv>=1.0.0",
-    "openai>=1.0.0",
-    # Use lightweight alternatives
-    "chromadb>=0.4.0",  # Vector database
-    "tiktoken>=0.5.0",   # Token counting
-    "pydantic>=2.0.0",   # Data validation
+    "lightrag-hku>=1.4.0",
+    "raganything>=1.2.0",
 ]
 
 [build-system]

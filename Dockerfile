@@ -2,7 +2,7 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies with pinned versions and no recommends
+# Install system dependencies
 RUN echo "Installing system dependencies..." && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -19,9 +19,9 @@ RUN echo "uv installed" && uv --version
 # Suppress UV hardlink warnings in Docker
 ENV UV_LINK_MODE=copy
 
-# Copy dependency files
+# Copy ALL project files needed for build (including README.md!)
 RUN echo "Copying project files..."
-COPY pyproject.toml .python-version ./
+COPY pyproject.toml .python-version README.md ./
 
 # Install Python dependencies
 RUN echo "Installing Python dependencies (this may take a few minutes)..." && \
@@ -41,3 +41,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Set entrypoint
 ENTRYPOINT ["uv", "run", "python", "main.py"]
 CMD ["--help"]
+

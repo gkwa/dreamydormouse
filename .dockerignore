@@ -48,17 +48,18 @@ data/
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
 # Git
 .git/
 .gitignore
 
 # Docker
-.dockerignore
-Dockerfile
 docker-compose.yml
 
 # Formatting
 .fmt/
 
-# Logs
-*.log
+# Don't ignore README.md - we need it!
+# (removing it from .dockerignore if it was there)
