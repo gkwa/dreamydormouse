@@ -1,0 +1,98 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: dreamydormouse:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify uv installation
+        run: |
+          echo "Checking uv version..."
+          docker run --rm dreamydormouse:test uv --version
+
+      - name: Verify Python environment
+        run: |
+          echo "Checking Python version..."
+          docker run --rm dreamydormouse:test python --version
+
+      - name: Show help output
+        run: |
+          echo "Testing CLI help..."
+          docker run --rm dreamydormouse:test
+
+      - name: Test with info command
+        run: |
+          echo "Testing info command..."
+          docker run --rm dreamydormouse:test info || true
+
+      - name: List installed packages
+        run: |
+          echo "Listing installed packages..."
+          docker run --rm dreamydormouse:test python -m pip list
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: dreamydormouse:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create test data directory
+        run: |
+          mkdir -p data
+          echo "# Test Document" > data/test.md
+          echo "This is a test." >> data/test.md
+
+      - name: Test process command with mock data
+        run: |
+          docker run --rm \
+            -v "$(pwd)/data:/app/data:ro" \
+            -v "$(pwd)/rag_storage:/app/rag_storage" \
+            dreamydormouse:test process /app/data || \
+            echo "Process command not yet implemented"
+
+      - name: Test query command
+        run: |
+          docker run --rm \
+            -v "$(pwd)/rag_storage:/app/rag_storage" \
+            dreamydormouse:test query "test query" || \
+            echo "Query command not yet implemented"

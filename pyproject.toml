@@ -1,0 +1,70 @@
+[project]
+name = "dreamydormouse"
+version = "0.1.0"
+description = "RAG system for querying Markdown files using RAG-Anything"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["raganything[text]>=0.1.0", "python-dotenv>=1.0.0"]
+
+[tool.ruff]
+preview = true
+
+[tool.ruff.lint]
+select = [
+  "A",
+  "AIR",
+  "ARG",
+  "ASYNC",
+  "ASYNC1",
+  "B",
+  "C",
+  "C4",
+  "C90",
+  "DJ",
+  "DTZ",
+  "E",
+  "EM",
+  "ERA",
+  "EXE",
+  "F",
+  "FA",
+  "FBT",
+  "FIX",
+  "FLY",
+  "G",
+  "I",
+  "ICN",
+  "INP",
+  "INT",
+  "ISC",
+  "LOG",
+  "N",
+  "NPY",
+  "PD",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "Q",
+  "R",
+  "RET",
+  "RSE",
+  "RUF",
+  "S",
+  "SIM",
+  "SLF",
+  "SLOT",
+  "T10",
+  "T20",
+  "TD",
+  "TID",
+  "TRY",
+  "UP",
+  "W",
+  "YTT",
+]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
